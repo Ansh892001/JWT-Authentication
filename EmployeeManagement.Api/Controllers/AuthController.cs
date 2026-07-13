@@ -1,5 +1,6 @@
-using EmployeeManagement.Api.Models;
+using EmployeeManagement.Api.Models.Requests;
 using EmployeeManagement.Api.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EmployeeManagement.Api.Controllers;
@@ -8,34 +9,28 @@ namespace EmployeeManagement.Api.Controllers;
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly ITokenService _tokenService;
+    private readonly IAuthService _authService;
 
-    public AuthController(ITokenService tokenService)
+    public AuthController(IAuthService authService)
     {
-        _tokenService = tokenService;
+        _authService = authService;
     }
 
     [HttpPost("login")]
-    public IActionResult Login(LoginRequest request)
+    public async Task<IActionResult> Login(LoginRequest request)
     {
-        if (request.Email != "ansh@gmail.com" ||
-            request.Password != "password123")
-        {
-            return Unauthorized();
-        }
+        var response = await _authService.LoginAsync(request);
 
-        var user = new User
-        {
-            Id = 1,
-            Email = request.Email,
-            Role = "Admin"
-        };
+        return Ok(response);
+    }
 
-        var token = _tokenService.GenerateToken(user);
+    [AllowAnonymous]
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh(
+    RefreshRequest request)
+    {
+        var response = await _authService.RefreshAsync(request);
 
-        return Ok(new LoginResponse
-        {
-            AccessToken = token
-        });
+        return Ok(response);
     }
 }

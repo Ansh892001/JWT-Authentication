@@ -1,5 +1,8 @@
 using System.Text;
 using EmployeeManagement.Api.Configuration;
+using EmployeeManagement.Api.Middlewares;
+using EmployeeManagement.Api.Repositories;
+using EmployeeManagement.Api.Repositories.Interfaces;
 using EmployeeManagement.Api.Services;
 using EmployeeManagement.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -34,7 +37,7 @@ public partial class Program
                 Description = "Enter your JWT token"
             });
 
-           options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+            options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
             {
                 [new OpenApiSecuritySchemeReference("Bearer", document)] = []
             });
@@ -45,6 +48,10 @@ public partial class Program
             builder.Configuration.GetSection("Jwt"));
 
         builder.Services.AddScoped<ITokenService, TokenService>();
+        builder.Services.AddScoped<IAuthService, AuthService>();
+        builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+        builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        builder.Services.AddScoped<IUserRepository, UserRepository>();
 
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
@@ -64,13 +71,19 @@ public partial class Program
                     ValidAudience = builder.Configuration["Jwt:Audience"],
 
                     IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+                        Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)),
+
+                    ClockSkew = TimeSpan.FromSeconds(30)
+
                 };
             });
 
 
 
         builder.Services.AddAuthorization();
+
+        builder.Services.AddHttpContextAccessor();
+
 
         var app = builder.Build();
 
@@ -80,6 +93,8 @@ public partial class Program
             app.UseSwagger();
             app.UseSwaggerUI();
         }
+
+        app.UseMiddleware<ExceptionMiddleware>();
 
         app.UseHttpsRedirection();
 

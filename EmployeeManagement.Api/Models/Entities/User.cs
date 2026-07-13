@@ -1,4 +1,4 @@
-namespace EmployeeManagement.Api.Models;
+namespace EmployeeManagement.Api.Models.Entities;
 
 public class User
 {
