@@ -8,6 +8,8 @@ using EmployeeManagement.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using EmployeeManagement.Api.Contexts;
+using Microsoft.EntityFrameworkCore;
 public partial class Program
 {
     private static void Main(string[] args)
@@ -78,7 +80,11 @@ public partial class Program
                 };
             });
 
-
+        builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        {
+            options.UseNpgsql(
+                builder.Configuration.GetConnectionString("DefaultConnection"));
+        });
 
         builder.Services.AddAuthorization();
 

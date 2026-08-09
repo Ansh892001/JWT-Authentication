@@ -19,7 +19,7 @@ public class TokenService : ITokenService
         _jwtSettings = options.Value;
     }
 
-    public string GenerateAccessToken(User user)
+    public string GenerateAccessToken(User user, DateTime expiresAt)
     {
         var claims = new List<Claim>
     {
@@ -40,7 +40,7 @@ public class TokenService : ITokenService
             issuer: _jwtSettings.Issuer,
             audience: _jwtSettings.Audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpiryMinutes),
+            expires: expiresAt,
             signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);

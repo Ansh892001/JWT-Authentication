@@ -4,7 +4,7 @@ namespace EmployeeManagement.Api.Services.Interfaces;
 
 public interface ITokenService
 {
-    string GenerateAccessToken(User user);
+    string GenerateAccessToken(User user, DateTime expiresAt);
 
     string GenerateRefreshToken();
 }

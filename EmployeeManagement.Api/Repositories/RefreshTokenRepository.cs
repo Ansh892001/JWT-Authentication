@@ -1,27 +1,34 @@
+using EmployeeManagement.Api.Contexts;
 using EmployeeManagement.Api.Models.Entities;
 using EmployeeManagement.Api.Repositories.Interfaces;
-
+using Microsoft.EntityFrameworkCore;
 namespace EmployeeManagement.Api.Repositories;
 
 public class RefreshTokenRepository : IRefreshTokenRepository
 {
     private static readonly List<RefreshToken> _tokens = new();
 
-    public Task SaveAsync(RefreshToken refreshToken)
+    private readonly ApplicationDbContext _context;
+
+    public RefreshTokenRepository(
+        ApplicationDbContext context)
     {
-        _tokens.Add(refreshToken);
-        return Task.CompletedTask;
+        _context = context;
+    }
+    public async Task SaveAsync(RefreshToken refreshToken)
+    {
+        await _context.RefreshTokens.AddAsync(refreshToken);
+
+        await _context.SaveChangesAsync();
+    }
+    public async Task<RefreshToken?> GetByTokenAsync(string token)
+    {
+        return await _context.RefreshTokens
+            .FirstOrDefaultAsync(x => x.Token == token);
     }
 
-    public Task<RefreshToken?> GetByTokenAsync(string token)
+    public async Task UpdateAsync(RefreshToken refreshToken)
     {
-        var refreshToken = _tokens.FirstOrDefault(t => t.Token == token);
-        return Task.FromResult(refreshToken);
-    }
-
-    public Task UpdateAsync(RefreshToken refreshToken)
-    {
-        // Nothing needed because the object reference is already updated.
-        return Task.CompletedTask;
+        await _context.SaveChangesAsync();
     }
 }

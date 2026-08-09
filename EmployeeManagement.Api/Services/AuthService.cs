@@ -32,12 +32,7 @@ public class AuthService : IAuthService
     {
         var user = await _userRepository.GetByEmailAsync(request.Email);
 
-        if (user is null)
-        {
-            throw new InvalidCredentialsException();
-        }
-
-        if (user.Password != request.Password)
+        if (user is null || user.Password != request.Password)
         {
             throw new InvalidCredentialsException();
         }
@@ -72,6 +67,10 @@ public class AuthService : IAuthService
 
         existingRefreshToken.ReplacedByToken = response.RefreshToken;
 
+        await RevokeRefreshTokenAsync(
+            existingRefreshToken,
+            response.RefreshToken);
+
         await _refreshTokenRepository.UpdateAsync(existingRefreshToken);
 
         return response;
@@ -88,7 +87,7 @@ public class AuthService : IAuthService
             now.AddDays(_jwtSettings.RefreshTokenExpiryDays);
 
         var accessToken =
-            _tokenService.GenerateAccessToken(user);
+            _tokenService.GenerateAccessToken(user, accessTokenExpiry);
 
         var refreshToken =
             _tokenService.GenerateRefreshToken();

@@ -1,10 +1,18 @@
+using EmployeeManagement.Api.Contexts;
 using EmployeeManagement.Api.Models.Entities;
 using EmployeeManagement.Api.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace EmployeeManagement.Api.Repositories;
 
 public class UserRepository : IUserRepository
 {
+    private readonly ApplicationDbContext _context;
+
+    public UserRepository(ApplicationDbContext context)
+    {
+        _context = context;
+    }
     private static readonly List<User> Users =
     [
         new User
@@ -23,18 +31,15 @@ public class UserRepository : IUserRepository
         }
     ];
 
-    public Task<User?> GetByEmailAsync(string email)
+    public async Task<User?> GetByEmailAsync(string email)
     {
-        var user = Users.FirstOrDefault(u =>
-            u.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
-
-        return Task.FromResult(user);
+        return await _context.Users.FirstOrDefaultAsync(x => x.Email == email);
     }
 
-    public Task<User?> GetByIdAsync(int id)
+    public async Task<User?> GetByIdAsync(int id)
     {
-        var user = Users.FirstOrDefault(u => u.Id == id);
+        return await _context.Users
+        .FirstOrDefaultAsync(x => x.Id == id);
 
-        return Task.FromResult(user);
     }
 }
