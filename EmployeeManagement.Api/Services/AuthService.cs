@@ -15,28 +15,31 @@ public class AuthService : IAuthService
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IUserRepository _userRepository;
     private readonly JwtSettings _jwtSettings;
+    private readonly IPasswordHasher _passwordHasher;
 
 
     public AuthService(
         IUserRepository userRepository,
         ITokenService tokenService,
         IRefreshTokenRepository refreshTokenRepository,
+        IPasswordHasher passwordHasher,
         IOptions<JwtSettings> options)
     {
         _userRepository = userRepository;
         _tokenService = tokenService;
         _refreshTokenRepository = refreshTokenRepository;
+        _passwordHasher = passwordHasher;
         _jwtSettings = options.Value;
     }
     public async Task<AuthResponse> LoginAsync(LoginRequest request)
     {
         var user = await _userRepository.GetByEmailAsync(request.Email);
-
-        if (user is null || user.Password != request.Password)
+        if (!_passwordHasher.VerifyPassword(
+        request.Password,
+        user.Password))
         {
             throw new InvalidCredentialsException();
         }
-
         return await IssueTokensAsync(user);
     }
 
@@ -74,6 +77,39 @@ public class AuthService : IAuthService
         await _refreshTokenRepository.UpdateAsync(existingRefreshToken);
 
         return response;
+    }
+
+    public async Task<RegisterResponse> RegisterAsync(RegisterRequest request)
+    {
+        // 1. Check duplicate email
+        var existingUser =
+            await _userRepository.GetByEmailAsync(request.Email);
+
+        if (existingUser != null)
+        {
+            throw new UserAlreadyExistsException();
+        }
+
+        // 2. Hash password
+        var hashedPassword =
+            _passwordHasher.HashPassword(request.Password);
+
+        // 3. Create entity
+        var user = new User
+        {
+            Email = request.Email,
+            Password = hashedPassword,
+            Role = "User"
+        };
+
+        // 4. Save
+        await _userRepository.AddAsync(user);
+
+        // 5. Return response
+        return new RegisterResponse
+        {
+            Message = "User registered successfully."
+        };
     }
 
     private async Task<AuthResponse> IssueTokensAsync(User user)

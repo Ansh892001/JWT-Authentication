@@ -13,23 +13,6 @@ public class UserRepository : IUserRepository
     {
         _context = context;
     }
-    private static readonly List<User> Users =
-    [
-        new User
-        {
-            Id = 1,
-            Email = "ansh@gmail.com",
-            Password = "password123",
-            Role = "Admin"
-        },
-        new User
-        {
-            Id = 2,
-            Email = "john@gmail.com",
-            Password = "password123",
-            Role = "Employee"
-        }
-    ];
 
     public async Task<User?> GetByEmailAsync(string email)
     {
@@ -40,6 +23,12 @@ public class UserRepository : IUserRepository
     {
         return await _context.Users
         .FirstOrDefaultAsync(x => x.Id == id);
+    }
 
+    public async Task AddAsync(User user)
+    {
+        await _context.Users.AddAsync(user);
+
+        await _context.SaveChangesAsync();
     }
 }

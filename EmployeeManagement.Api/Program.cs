@@ -10,6 +10,9 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using EmployeeManagement.Api.Contexts;
 using Microsoft.EntityFrameworkCore;
+using EmployeeManagement.Api.Validators;
+using FluentValidation;
+
 public partial class Program
 {
     private static void Main(string[] args)
@@ -18,6 +21,8 @@ public partial class Program
 
         // Services
         builder.Services.AddControllers();
+
+        builder.Services.AddValidatorsFromAssemblyContaining<RegisterRequestValidator>();
 
         builder.Services.AddEndpointsApiExplorer();
 
@@ -54,6 +59,7 @@ public partial class Program
         builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
         builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         builder.Services.AddScoped<IUserRepository, UserRepository>();
+        builder.Services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
 
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>

@@ -14,6 +14,15 @@ public static class ExceptionMapper
                 ErrorCode = "AUTH001",
                 LogException = false
             }
+        },
+        {
+            typeof(UserAlreadyExistsException),
+            new ExceptionDetails
+            {
+                StatusCode = StatusCodes.Status409Conflict,
+                ErrorCode = "AUTH002",
+                LogException = false
+            }
         }
     };
 
