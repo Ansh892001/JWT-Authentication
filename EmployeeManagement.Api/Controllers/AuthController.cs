@@ -56,4 +56,14 @@ public class AuthController : ControllerBase
 
         return Created(string.Empty, response);
     }
+
+    [Authorize]
+    [HttpPost("logout")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Logout(LogoutRequest request)
+    {
+        await _authService.LogoutAsync(request);
+        return NoContent();
+    }
 }

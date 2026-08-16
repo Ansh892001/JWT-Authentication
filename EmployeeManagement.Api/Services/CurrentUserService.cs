@@ -12,21 +12,17 @@ public class CurrentUserService : ICurrentUserService
     }
 
     public int UserId =>
-        int.Parse(
-            _httpContextAccessor.HttpContext!
-            .User
-            .FindFirst(JwtRegisteredClaimNames.Sub)!
-            .Value);
+        int.Parse(GetRequiredClaim(ClaimTypes.NameIdentifier).Value);
 
     public string Email =>
-        _httpContextAccessor.HttpContext!
-            .User
-            .FindFirst(JwtRegisteredClaimNames.Email)!
-            .Value;
+        GetRequiredClaim(ClaimTypes.Email).Value;
 
     public string Role =>
-        _httpContextAccessor.HttpContext!
-            .User
-            .FindFirst(ClaimTypes.Role)!
-            .Value;
+        GetRequiredClaim(ClaimTypes.Role).Value;
+
+    private Claim GetRequiredClaim(string claimType)
+    {
+        return _httpContextAccessor.HttpContext?.User.FindFirst(claimType)
+            ?? throw new UnauthorizedAccessException("User is not authenticated.");
+    }
 }

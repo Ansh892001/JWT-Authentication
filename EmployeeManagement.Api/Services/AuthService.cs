@@ -11,9 +11,10 @@ namespace EmployeeManagement.Api.Services;
 
 public class AuthService : IAuthService
 {
+    private readonly IUserRepository _userRepository;
     private readonly ITokenService _tokenService;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
-    private readonly IUserRepository _userRepository;
+    private readonly ICurrentUserService _currentUserService;
     private readonly JwtSettings _jwtSettings;
     private readonly IPasswordHasher _passwordHasher;
 
@@ -23,12 +24,14 @@ public class AuthService : IAuthService
         ITokenService tokenService,
         IRefreshTokenRepository refreshTokenRepository,
         IPasswordHasher passwordHasher,
+        ICurrentUserService currentUserService,
         IOptions<JwtSettings> options)
     {
         _userRepository = userRepository;
         _tokenService = tokenService;
         _refreshTokenRepository = refreshTokenRepository;
         _passwordHasher = passwordHasher;
+        _currentUserService = currentUserService;
         _jwtSettings = options.Value;
     }
     public async Task<AuthResponse> LoginAsync(LoginRequest request)
@@ -112,6 +115,30 @@ public class AuthService : IAuthService
         };
     }
 
+    public async Task<LogoutResponse> LogoutAsync(LogoutRequest request)
+    {
+        var refreshToken = await _refreshTokenRepository.GetByTokenAsync(request.RefreshToken);
+        if (refreshToken is null) {
+            throw new InvalidCredentialsException("Invalid Refresh Token.");
+        }
+
+        var currentUserId = _currentUserService.UserId;
+        if (refreshToken.UserId != currentUserId) {
+            throw new InvalidCredentialsException("Invalid refresh token.");
+        }
+
+        if (refreshToken.IsRevoked) {
+            return new LogoutResponse
+            {
+                Message = "User logged out successfully."
+            };    
+        }
+        await RevokeRefreshTokenAsync(refreshToken);
+        return new LogoutResponse
+        {
+            Message = "User logged out successfully."
+        };
+    }
     private async Task<AuthResponse> IssueTokensAsync(User user)
     {
         var now = DateTime.UtcNow;
