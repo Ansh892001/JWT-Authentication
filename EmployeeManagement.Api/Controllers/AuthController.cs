@@ -66,4 +66,13 @@ public class AuthController : ControllerBase
         await _authService.LogoutAsync(request);
         return NoContent();
     }
+
+    [Authorize]
+    [HttpPost("logout-all")]
+    public async Task<IActionResult> LogoutAll()
+    {
+        await _authService.LogoutAllAsync();
+
+        return NoContent();
+    }
 }

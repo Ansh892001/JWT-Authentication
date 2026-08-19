@@ -187,4 +187,12 @@ public class AuthService : IAuthService
 
         await _refreshTokenRepository.UpdateAsync(refreshToken);
     }
+
+    public async Task LogoutAllAsync()
+    {
+        var userId = _currentUserService.UserId;
+
+        await _refreshTokenRepository
+            .RevokeAllByUserIdAsync(userId);
+    }
 }
