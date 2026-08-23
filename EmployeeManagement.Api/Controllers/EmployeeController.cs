@@ -7,13 +7,13 @@ namespace EmployeeManagement.Api.Controllers;
 [Route("api/[controller]")]
 public class EmployeeController : ControllerBase
 {
-    [Authorize]
+    [Authorize(Roles = "Employee")]
     [HttpGet]
     public IActionResult GetEmployees()
     {
         return Ok(new[]
         {
-            "John",
+            "Ansh",
             "Alice",
             "Bob"
         });
